@@ -22,11 +22,11 @@ class StorageTreeView:
         self.tree.column("path", width=260, minwidth=200)
 
         # Set headers
-        self.tree.heading("#0", text="Name", command=lambda: self.sort_tree("name"))
-        self.tree.heading("size", text="Size", command=lambda: self.sort_tree("size"))
+        self.tree.heading("#0", text="Name")
+        self.tree.heading("size", text="Size")
         self.tree.heading("percentage", text="%")
-        self.tree.heading("files", text="Files", command=lambda: self.sort_tree("files"))
-        self.tree.heading("path", text="Path", command=lambda: self.sort_tree("path"))
+        self.tree.heading("files", text="Files")
+        self.tree.heading("path", text="Path")
 
         # Initialize sorting state
         self.sort_column = "name"
@@ -35,6 +35,22 @@ class StorageTreeView:
         # Bind events
         self.tree.bind('<<TreeviewOpen>>', self.on_open)
         self.tree.bind('<<TreeviewClose>>', self.on_close)
+        self.tree.bind('<ButtonRelease-1>', self.on_header_click)
+
+    def on_header_click(self, event):
+        """Handle header click event"""
+        region = self.tree.identify_region(event.x, event.y)
+        if region == "heading":
+            column = self.tree.identify_column(event.x)
+            # Convert column identifier (#1, #2, etc.) to column name
+            column_index = int(column.replace('#', ''))
+            if column_index == 0:
+                self.sort_tree("name")
+            else:
+                # Map column index to column name
+                columns = ["size", "percentage", "files", "path"]
+                if column_index <= len(columns):
+                    self.sort_tree(columns[column_index - 1])
 
     def sort_tree(self, column):
         """Sort tree content when a column header is clicked"""
