@@ -22,15 +22,68 @@ class StorageTreeView:
         self.tree.column("path", width=260, minwidth=200)
 
         # Set headers
-        self.tree.heading("#0", text="Name")
-        self.tree.heading("size", text="Size")
+        self.tree.heading("#0", text="Name", command=lambda: self.sort_tree("name"))
+        self.tree.heading("size", text="Size", command=lambda: self.sort_tree("size"))
         self.tree.heading("percentage", text="%")
-        self.tree.heading("files", text="Files")
-        self.tree.heading("path", text="Path")
+        self.tree.heading("files", text="Files", command=lambda: self.sort_tree("files"))
+        self.tree.heading("path", text="Path", command=lambda: self.sort_tree("path"))
+
+        # Initialize sorting state
+        self.sort_column = "name"
+        self.sort_reverse = False
 
         # Bind events
         self.tree.bind('<<TreeviewOpen>>', self.on_open)
         self.tree.bind('<<TreeviewClose>>', self.on_close)
+
+    def sort_tree(self, column):
+        """Sort tree content when a column header is clicked"""
+        items = []
+        parent = ""  # Sort only top-level items
+
+        # Change sort direction if clicking the same column
+        if self.sort_column == column:
+            self.sort_reverse = not self.sort_reverse
+        else:
+            self.sort_reverse = False
+        self.sort_column = column
+
+        # Get all top-level items
+        for item in self.tree.get_children(parent):
+            values = self.tree.item(item)
+            items.append((values["text"], values["values"], item))
+
+        # Sort items based on column
+        items.sort(key=lambda x: self._get_sort_key(x, column), reverse=self.sort_reverse)
+
+        # Rearrange items in sorted order
+        for index, (_, _, item) in enumerate(items):
+            self.tree.move(item, parent, index)
+
+    def _get_sort_key(self, item, column):
+        """Get the sorting key based on column"""
+        text, values, _ = item
+        if column == "name":
+            return text.lower()
+        elif column == "size":
+            # Extract numeric value from size string
+            size_str = values[0]
+            try:
+                number = float(size_str.split()[0])
+                unit = size_str.split()[1]
+                # Convert to bytes for comparison
+                multiplier = {"B": 1, "KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4, "PB": 1024**5}
+                return number * multiplier.get(unit, 0)
+            except:
+                return 0
+        elif column == "files":
+            try:
+                return int(values[2])
+            except:
+                return 0
+        elif column == "path":
+            return values[3].lower()
+        return ""
 
     def clear(self):
         """Clear the treeview"""
