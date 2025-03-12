@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from gui_components import StorageTreeView
-from folder_scanner import FolderScanner
+from .gui_components import StorageTreeView
+from .folder_scanner import FolderScanner
 import threading
 
 class StorageAnalyzer:
@@ -68,7 +68,7 @@ class StorageAnalyzer:
     def refresh(self):
         current_selection = self.tree.get_selected_path()
         if current_selection:
-            self.select_folder(current_selection)
+            self.select_folder()
 
     def expand_all(self):
         self.tree.expand_all()
@@ -79,6 +79,9 @@ class StorageAnalyzer:
     def run(self):
         self.root.mainloop()
 
-if __name__ == "__main__":
+def main():
     app = StorageAnalyzer()
     app.run()
+
+if __name__ == "__main__":
+    main()
