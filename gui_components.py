@@ -64,7 +64,8 @@ class StorageTreeView:
         """Get the sorting key based on column"""
         text, values, _ = item
         if column == "name":
-            return text.lower()
+            # Remove folder icon and error indicators for sorting
+            return text.replace("🗀 ", "").replace(" (⚠️ Access denied)", "").lower()
         elif column == "size":
             # Extract numeric value from size string
             size_str = values[0]
