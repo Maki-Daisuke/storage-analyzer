@@ -93,6 +93,11 @@ class StorageTreeView:
                 return number * multiplier.get(unit, 0)
             except:
                 return 0
+        elif column == "percentage":
+            try:
+                return float(values[1]) if values[1] else 0
+            except:
+                return 0
         elif column == "files":
             try:
                 return int(values[2])
