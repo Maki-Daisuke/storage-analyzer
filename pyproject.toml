@@ -5,6 +5,7 @@ description = "A Python-based storage analysis application for Windows with inte
 authors = ["Storage Analyzer Developer"]
 readme = "README.md"
 packages = [{include = "storage_analyzer"}]
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
