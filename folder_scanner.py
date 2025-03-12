@@ -1,11 +1,53 @@
 import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Callable
 import logging
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler, FileModifiedEvent, FileCreatedEvent, FileDeletedEvent
+
+class FolderChangeHandler(FileSystemEventHandler):
+    def __init__(self, callback: Callable[[str], None]):
+        self.callback = callback
+        self.logger = logging.getLogger(__name__)
+
+    def on_any_event(self, event):
+        if isinstance(event, (FileModifiedEvent, FileCreatedEvent, FileDeletedEvent)):
+            try:
+                # Get the parent directory of the changed file
+                parent_dir = str(Path(event.src_path).parent)
+                self.logger.debug(f"File system change detected in: {parent_dir}")
+                self.callback(parent_dir)
+            except Exception as e:
+                self.logger.error(f"Error handling file system event: {str(e)}")
 
 class FolderScanner:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.observer = None
+        self.handler = None
+
+    def start_monitoring(self, callback: Callable[[str], None]):
+        """Start monitoring file system changes"""
+        self.handler = FolderChangeHandler(callback)
+        self.observer = Observer()
+        self.observer.start()
+        self.logger.debug("Started file system observer")
+
+    def add_watch_path(self, path: str):
+        """Add a path to watch for changes"""
+        if self.observer and self.handler:
+            try:
+                self.observer.schedule(self.handler, path, recursive=True)
+                self.logger.debug(f"Started monitoring path: {path}")
+            except Exception as e:
+                self.logger.error(f"Error setting up file system monitor: {str(e)}")
+
+    def stop_monitoring(self):
+        """Stop monitoring file system changes"""
+        if self.observer:
+            self.observer.stop()
+            self.observer.join()
+            self.logger.debug("Stopped file system monitoring")
 
     def scan(self, root_path: str) -> Dict[str, Any]:
         """Recursively scan folder and collect storage information"""
