@@ -10,10 +10,6 @@
 - 🌳 対話的なフォルダツリービュー（サイズ情報付き）
 - 📋 ソート可能な列（名前、サイズ、ファイル数、パス）
 
-## スクリーンショット
-
-![Storage Analyzer実行画面](docs/images/storage-analyzer-main.png)
-
 ## インストール方法
 
 ```bash
