@@ -22,6 +22,7 @@ class FolderScanner:
             'name': path.name or str(path),
             'path': str(path),
             'size': 0,
+            'file_count': 0,
             'children': [],
             'type': 'directory'
         }
@@ -32,16 +33,12 @@ class FolderScanner:
                 if item.is_file():
                     size = item.stat().st_size
                     result['size'] += size
-                    result['children'].append({
-                        'name': item.name,
-                        'path': str(item),
-                        'size': size,
-                        'type': 'file'
-                    })
+                    result['file_count'] += 1
                 elif item.is_dir():
                     try:
                         subdir_info = self._scan_directory(item)
                         result['size'] += subdir_info['size']
+                        result['file_count'] += subdir_info['file_count']
                         result['children'].append(subdir_info)
                     except PermissionError:
                         self.logger.warning(f"Permission denied: {item}")
@@ -49,6 +46,7 @@ class FolderScanner:
                             'name': item.name,
                             'path': str(item),
                             'size': 0,
+                            'file_count': 0,
                             'type': 'directory',
                             'error': 'Access denied'
                         })

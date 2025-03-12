@@ -14,14 +14,16 @@ class StorageTreeView:
         self.tree.configure(yscrollcommand=scrollbar.set)
 
         # Configure columns
-        self.tree["columns"] = ("size", "path")
+        self.tree["columns"] = ("size", "files", "path")
         self.tree.column("#0", width=300, minwidth=200)
         self.tree.column("size", width=100, minwidth=100)
-        self.tree.column("path", width=400, minwidth=200)
+        self.tree.column("files", width=70, minwidth=70)
+        self.tree.column("path", width=330, minwidth=200)
 
         # Set headers
         self.tree.heading("#0", text="Name")
         self.tree.heading("size", text="Size")
+        self.tree.heading("files", text="Files")
         self.tree.heading("path", text="Path")
 
         # Bind events
@@ -35,35 +37,37 @@ class StorageTreeView:
 
     def populate(self, data: Dict[str, Any], parent: str = ""):
         """Add data to the treeview"""
-        # Select icon
-        icon = "🗀" if data['type'] == 'directory' else "📄"
+        if data['type'] != 'directory':
+            return
 
-        # Format size
+        # Format size and create display text
         size_str = self._format_size(data['size'])
+        files_count = data['file_count']
 
         # Handle error display
         if 'error' in data:
-            item_text = f"{icon} {data['name']} (⚠️ {data['error']})"
+            item_text = f"🗀 {data['name']} (⚠️ {data['error']})"
         else:
-            item_text = f"{icon} {data['name']}"
+            item_text = f"🗀 {data['name']}"
 
         # Add item
         item_id = self.tree.insert(
             parent, 'end',
             text=item_text,
-            values=(size_str, data['path'])
+            values=(size_str, files_count, data['path'])
         )
 
-        # Add children
+        # Add children (only directories)
         if 'children' in data:
             for child in data['children']:
-                self.populate(child, item_id)
+                if child['type'] == 'directory':
+                    self.populate(child, item_id)
 
     def get_selected_path(self) -> Optional[str]:
         """Get the path of the selected item"""
         selection = self.tree.selection()
         if selection:
-            return self.tree.item(selection[0])['values'][1]
+            return self.tree.item(selection[0])['values'][2]  # Path is now at index 2
         return None
 
     def expand_all(self):
