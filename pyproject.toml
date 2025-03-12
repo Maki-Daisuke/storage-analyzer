@@ -2,7 +2,7 @@
 name = "storage-analyzer"
 version = "0.1.0"
 description = "A Python-based storage analysis application for Windows with interactive GUI"
-authors = ["Storage Analyzer Developer"]
+authors = ["Daisuke (yanother) Maki"]
 readme = "README.md"
 packages = [{include = "storage_analyzer"}]
 license = "MIT"
