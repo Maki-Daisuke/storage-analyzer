@@ -8,7 +8,9 @@ packages = [{include = "storage_analyzer"}]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
+pillow = "^11.1.0"
+pyscreenshot = "^3.1"
 
 [tool.poetry.scripts]
 storage-analyzer = "storage_analyzer.storage_analyzer:main"
