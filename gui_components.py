@@ -14,15 +14,17 @@ class StorageTreeView:
         self.tree.configure(yscrollcommand=scrollbar.set)
 
         # Configure columns
-        self.tree["columns"] = ("size", "files", "path")
+        self.tree["columns"] = ("size", "percentage", "files", "path")
         self.tree.column("#0", width=300, minwidth=200)
         self.tree.column("size", width=100, minwidth=100)
+        self.tree.column("percentage", width=70, minwidth=70)
         self.tree.column("files", width=70, minwidth=70)
-        self.tree.column("path", width=330, minwidth=200)
+        self.tree.column("path", width=260, minwidth=200)
 
         # Set headers
         self.tree.heading("#0", text="Name")
         self.tree.heading("size", text="Size")
+        self.tree.heading("percentage", text="%")
         self.tree.heading("files", text="Files")
         self.tree.heading("path", text="Path")
 
@@ -35,7 +37,7 @@ class StorageTreeView:
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-    def populate(self, data: Dict[str, Any], parent: str = ""):
+    def populate(self, data: Dict[str, Any], parent: str = "", parent_size: float = None):
         """Add data to the treeview"""
         if data['type'] != 'directory':
             return
@@ -43,6 +45,11 @@ class StorageTreeView:
         # Format size and create display text
         size_str = self._format_size(data['size'])
         files_count = data['file_count']
+
+        # Calculate percentage if parent exists
+        percentage = ""
+        if parent_size is not None and parent_size > 0:
+            percentage = f"{(data['size'] / parent_size) * 100:.1f}"
 
         # Handle error display
         if 'error' in data:
@@ -54,20 +61,20 @@ class StorageTreeView:
         item_id = self.tree.insert(
             parent, 'end',
             text=item_text,
-            values=(size_str, files_count, data['path'])
+            values=(size_str, percentage, files_count, data['path'])
         )
 
         # Add children (only directories)
         if 'children' in data:
             for child in data['children']:
                 if child['type'] == 'directory':
-                    self.populate(child, item_id)
+                    self.populate(child, item_id, data['size'])
 
     def get_selected_path(self) -> Optional[str]:
         """Get the path of the selected item"""
         selection = self.tree.selection()
         if selection:
-            return self.tree.item(selection[0])['values'][2]  # Path is now at index 2
+            return self.tree.item(selection[0])['values'][3]  # Path is now at index 3
         return None
 
     def expand_all(self):
