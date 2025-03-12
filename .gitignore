@@ -38,3 +38,7 @@ ENV/
 
 # Misc
 .DS_Store
+
+# Keep docs/images
+!docs/
+!docs/images/
