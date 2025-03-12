@@ -1,32 +1,61 @@
-# Storage Analyzer
+# Storage Analyzer (ストレージ解析ツール)
 
-A Python-based storage analysis application for Windows that provides an interactive, user-friendly GUI to explore and analyze folder structures and storage usage with advanced sorting and visualization capabilities.
+Windows向けのストレージ使用状況を分析・可視化するPythonベースのGUIアプリケーションです。
+フォルダ構造を対話的に探索し、ストレージの使用状況を詳細に分析することができます。
 
-## Features
+## 主な機能
 
-- Interactive folder tree view with size information
-- Real-time storage analysis
-- Sortable columns (Name, Size, Files, Path)
-- Maintains folder expansion state during sorting
-- Error handling for inaccessible folders
+- 🌳 対話的なフォルダツリービュー（サイズ情報付き）
+- 📋 ソート可能な列（名前、サイズ、ファイル数、パス）
 
-## Requirements
-
-- Python 3.8 or higher
-- tkinter (included in standard Python distribution)
-
-## Installation
+## インストール方法
 
 ```bash
 pip install storage-analyzer
 ```
 
-## Usage
+または、Poetry経由でインストール：
 
-Run the application:
+```bash
+poetry add storage-analyzer
+```
 
+## 使用方法
+
+1. アプリケーションを起動：
 ```bash
 storage-analyzer
 ```
 
-Select a folder to analyze using the "Select Folder" button.
+2. 「Select Folder」ボタンをクリックして、分析したいフォルダを選択します。
+3. フォルダツリーが表示され、各フォルダのサイズや内容を確認できます。
+4. 列ヘッダーをクリックすることで、異なる基準でソートができます。
+
+## 要件
+
+- Python 3.8以上
+- tkinter（標準のPythonディストリビューションに含まれています）
+
+## 今後の機能
+
+- 複数フォルダの同時分析機能
+- エクスポート機能（CSV、JSON形式）
+
+## 開発者向け情報
+
+プロジェクトの開発に参加する場合：
+
+```bash
+# リポジトリのクローン
+git clone https://github.com/username/storage-analyzer.git
+
+# 依存関係のインストール
+poetry install
+
+# 開発用サーバーの起動
+poetry run storage-analyzer
+```
+
+## ライセンス
+
+このプロジェクトはMITライセンスの下で公開されています。
