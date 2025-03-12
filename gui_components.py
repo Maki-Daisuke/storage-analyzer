@@ -1,9 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+import logging
+import copy
 
 class StorageTreeView:
     def __init__(self, parent):
+        self.logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.DEBUG)
+
         # Create Treeview
         self.tree = ttk.Treeview(parent)
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -31,80 +36,102 @@ class StorageTreeView:
         # Initialize sorting state
         self.sort_column = "name"
         self.sort_reverse = False
+        self.stored_data = None
 
         # Bind events
+        self.tree.bind('<ButtonRelease-1>', self.on_header_click)
         self.tree.bind('<<TreeviewOpen>>', self.on_open)
         self.tree.bind('<<TreeviewClose>>', self.on_close)
-        self.tree.bind('<ButtonRelease-1>', self.on_header_click)
+
+    def get_expanded_items(self) -> List[str]:
+        """Get list of expanded item paths"""
+        expanded = []
+        def collect_expanded(item):
+            if self.tree.item(item)['open']:
+                values = self.tree.item(item)['values']
+                if values:  # Check if values exist
+                    expanded.append(values[3])  # Path is at index 3
+            for child in self.tree.get_children(item):
+                collect_expanded(child)
+
+        for item in self.tree.get_children():
+            collect_expanded(item)
+        return expanded
+
+    def expand_items_by_path(self, expanded_paths: List[str]):
+        """Expand items based on their paths"""
+        def expand_by_path(item):
+            values = self.tree.item(item)['values']
+            if values and values[3] in expanded_paths:
+                self.tree.item(item, open=True)
+            for child in self.tree.get_children(item):
+                expand_by_path(child)
+
+        for item in self.tree.get_children():
+            expand_by_path(item)
 
     def on_header_click(self, event):
-        """Handle header click event"""
         region = self.tree.identify_region(event.x, event.y)
+        self.logger.debug(f"Clicked region: {region}")
+
         if region == "heading":
             column = self.tree.identify_column(event.x)
-            # Convert column identifier (#1, #2, etc.) to column name
             column_index = int(column.replace('#', ''))
-            if column_index == 0:
-                self.sort_tree("name")
+            self.logger.debug(f"Clicked column index: {column_index}")
+
+            column_name = "name" if column_index == 0 else ["size", "percentage", "files", "path"][column_index - 1]
+            self.logger.debug(f"Selected column for sorting: {column_name}")
+
+            # Toggle sort direction if same column
+            if self.sort_column == column_name:
+                self.sort_reverse = not self.sort_reverse
             else:
-                # Map column index to column name
-                columns = ["size", "percentage", "files", "path"]
-                if column_index <= len(columns):
-                    self.sort_tree(columns[column_index - 1])
+                self.sort_column = column_name
+                self.sort_reverse = False
 
-    def sort_tree(self, column):
-        """Sort tree content when a column header is clicked"""
-        items = []
-        parent = ""  # Sort only top-level items
+            self.logger.debug(f"Sort direction reversed: {self.sort_reverse}")
 
-        # Change sort direction if clicking the same column
-        if self.sort_column == column:
-            self.sort_reverse = not self.sort_reverse
-        else:
-            self.sort_reverse = False
-        self.sort_column = column
+            # Rebuild tree with new sorting
+            if self.stored_data:
+                self.logger.debug("Rebuilding tree with sorted data")
+                # Store expanded state
+                expanded_paths = self.get_expanded_items()
+                self.logger.debug(f"Stored expanded paths: {expanded_paths}")
 
-        # Get all top-level items
-        for item in self.tree.get_children(parent):
-            values = self.tree.item(item)
-            items.append((values["text"], values["values"], item))
+                self.clear()
+                self.populate(copy.deepcopy(self.stored_data))
 
-        # Sort items based on column
-        items.sort(key=lambda x: self._get_sort_key(x, column), reverse=self.sort_reverse)
+                # Restore expanded state
+                self.expand_items_by_path(expanded_paths)
+                self.logger.debug("Restored expanded state")
 
-        # Rearrange items in sorted order
-        for index, (_, _, item) in enumerate(items):
-            self.tree.move(item, parent, index)
+    def sort_items(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        if not data.get('children'):
+            return data
 
-    def _get_sort_key(self, item, column):
-        """Get the sorting key based on column"""
-        text, values, _ = item
-        if column == "name":
-            # Remove folder icon and error indicators for sorting
-            return text.replace("🗀 ", "").replace(" (⚠️ Access denied)", "").lower()
-        elif column == "size":
-            # Extract numeric value from size string
-            size_str = values[0]
-            try:
-                number = float(size_str.split()[0])
-                unit = size_str.split()[1]
-                # Convert to bytes for comparison
-                multiplier = {"B": 1, "KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4, "PB": 1024**5}
-                return number * multiplier.get(unit, 0)
-            except:
-                return 0
-        elif column == "percentage":
-            try:
-                return float(values[1]) if values[1] else 0
-            except:
-                return 0
-        elif column == "files":
-            try:
-                return int(values[2])
-            except:
-                return 0
-        elif column == "path":
-            return values[3].lower()
+        self.logger.debug(f"Sorting children by {self.sort_column} {'descending' if self.sort_reverse else 'ascending'}")
+
+        # Sort children based on current sort settings
+        data['children'].sort(key=lambda x: self.get_sort_key(x), reverse=self.sort_reverse)
+
+        # Recursively sort child folders
+        for child in data['children']:
+            if child['type'] == 'directory':
+                self.sort_items(child)
+
+        return data
+
+    def get_sort_key(self, item: Dict[str, Any]):
+        if self.sort_column == "name":
+            return item['name'].lower()
+        elif self.sort_column == "size":
+            return item['size']
+        elif self.sort_column == "percentage":
+            return item.get('percentage', 0)
+        elif self.sort_column == "files":
+            return item['file_count']
+        elif self.sort_column == "path":
+            return item['path'].lower()
         return ""
 
     def clear(self):
@@ -114,6 +141,12 @@ class StorageTreeView:
 
     def populate(self, data: Dict[str, Any], parent: str = "", parent_size: float = None):
         """Add data to the treeview"""
+        # Store the original data for sorting
+        if parent == "":
+            self.logger.debug("Storing initial data for sorting")
+            self.stored_data = copy.deepcopy(data)
+            data = self.sort_items(data)
+
         if data['type'] != 'directory':
             return
 
@@ -174,10 +207,12 @@ class StorageTreeView:
 
     def on_open(self, event):
         """Handle folder open event"""
+        self.logger.debug("Folder opened")
         pass
 
     def on_close(self, event):
         """Handle folder close event"""
+        self.logger.debug("Folder closed")
         pass
 
     @staticmethod
