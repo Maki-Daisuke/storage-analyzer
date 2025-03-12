@@ -8,7 +8,7 @@ class FolderScanner:
         self.logger = logging.getLogger(__name__)
 
     def scan(self, root_path: str) -> Dict[str, Any]:
-        """フォルダを再帰的にスキャンし、容量情報を収集"""
+        """Recursively scan folder and collect storage information"""
         try:
             root = Path(root_path)
             return self._scan_directory(root)
@@ -17,7 +17,7 @@ class FolderScanner:
             raise
 
     def _scan_directory(self, path: Path) -> Dict[str, Any]:
-        """ディレクトリの容量情報を収集"""
+        """Collect directory storage information"""
         result = {
             'name': path.name or str(path),
             'path': str(path),
@@ -27,7 +27,7 @@ class FolderScanner:
         }
 
         try:
-            # ディレクトリ内のファイルとフォルダを走査
+            # Scan files and folders in directory
             for item in path.iterdir():
                 if item.is_file():
                     size = item.stat().st_size
@@ -50,23 +50,23 @@ class FolderScanner:
                             'path': str(item),
                             'size': 0,
                             'type': 'directory',
-                            'error': 'アクセス権限がありません'
+                            'error': 'Access denied'
                         })
 
         except PermissionError:
             self.logger.warning(f"Permission denied while scanning: {path}")
-            result['error'] = 'アクセス権限がありません'
+            result['error'] = 'Access denied'
         except Exception as e:
             self.logger.error(f"Error scanning directory {path}: {str(e)}")
-            result['error'] = f'スキャンエラー: {str(e)}'
+            result['error'] = f'Scan error: {str(e)}'
 
         return result
 
     @staticmethod
-    def format_size(size: int) -> str:
-        """バイト数を人間が読みやすい形式に変換"""
+    def format_size(size: float) -> str:
+        """Convert bytes to human-readable format"""
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-            if size < 1024:
+            if size < 1024.0:
                 return f"{size:.1f} {unit}"
-            size /= 1024
+            size /= 1024.0
         return f"{size:.1f} PB"

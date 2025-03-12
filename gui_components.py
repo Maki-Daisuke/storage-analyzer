@@ -4,70 +4,70 @@ from typing import Dict, Any, Optional
 
 class StorageTreeView:
     def __init__(self, parent):
-        # Treeviewの作成
+        # Create Treeview
         self.tree = ttk.Treeview(parent)
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # スクロールバーの追加
+        # Add scrollbar
         scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=self.tree.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.tree.configure(yscrollcommand=scrollbar.set)
 
-        # カラムの設定
+        # Configure columns
         self.tree["columns"] = ("size", "path")
         self.tree.column("#0", width=300, minwidth=200)
         self.tree.column("size", width=100, minwidth=100)
         self.tree.column("path", width=400, minwidth=200)
 
-        # ヘッダーの設定
-        self.tree.heading("#0", text="名前")
-        self.tree.heading("size", text="サイズ")
-        self.tree.heading("path", text="パス")
+        # Set headers
+        self.tree.heading("#0", text="Name")
+        self.tree.heading("size", text="Size")
+        self.tree.heading("path", text="Path")
 
-        # イベントバインド
+        # Bind events
         self.tree.bind('<<TreeviewOpen>>', self.on_open)
         self.tree.bind('<<TreeviewClose>>', self.on_close)
 
     def clear(self):
-        """ツリービューをクリア"""
+        """Clear the treeview"""
         for item in self.tree.get_children():
             self.tree.delete(item)
 
     def populate(self, data: Dict[str, Any], parent: str = ""):
-        """ツリービューにデータを追加"""
-        # アイコンの選択
+        """Add data to the treeview"""
+        # Select icon
         icon = "🗀" if data['type'] == 'directory' else "📄"
-        
-        # サイズのフォーマット
+
+        # Format size
         size_str = self._format_size(data['size'])
-        
-        # エラー表示の処理
+
+        # Handle error display
         if 'error' in data:
             item_text = f"{icon} {data['name']} (⚠️ {data['error']})"
         else:
             item_text = f"{icon} {data['name']}"
 
-        # アイテムの追加
+        # Add item
         item_id = self.tree.insert(
             parent, 'end',
             text=item_text,
             values=(size_str, data['path'])
         )
 
-        # 子要素の追加
+        # Add children
         if 'children' in data:
             for child in data['children']:
                 self.populate(child, item_id)
 
     def get_selected_path(self) -> Optional[str]:
-        """選択されているアイテムのパスを取得"""
+        """Get the path of the selected item"""
         selection = self.tree.selection()
         if selection:
             return self.tree.item(selection[0])['values'][1]
         return None
 
     def expand_all(self):
-        """すべての項目を展開"""
+        """Expand all items"""
         def expand_recursive(item):
             self.tree.item(item, open=True)
             for child in self.tree.get_children(item):
@@ -77,7 +77,7 @@ class StorageTreeView:
             expand_recursive(item)
 
     def collapse_all(self):
-        """すべての項目を折りたたむ"""
+        """Collapse all items"""
         def collapse_recursive(item):
             self.tree.item(item, open=False)
             for child in self.tree.get_children(item):
@@ -87,18 +87,18 @@ class StorageTreeView:
             collapse_recursive(item)
 
     def on_open(self, event):
-        """フォルダを開いたときの処理"""
+        """Handle folder open event"""
         pass
 
     def on_close(self, event):
-        """フォルダを閉じたときの処理"""
+        """Handle folder close event"""
         pass
 
     @staticmethod
-    def _format_size(size: int) -> str:
-        """バイト数を人間が読みやすい形式に変換"""
+    def _format_size(size: float) -> str:
+        """Convert bytes to human-readable format"""
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-            if size < 1024:
+            if size < 1024.0:
                 return f"{size:.1f} {unit}"
-            size /= 1024
+            size /= 1024.0
         return f"{size:.1f} PB"
