@@ -4,14 +4,43 @@ from typing import Dict, Any, Optional, List
 import logging
 import copy
 
+class ToolTip:
+    def __init__(self, widget):
+        self.widget = widget
+        self.tip_window = None
+
+    def show_tip(self, text, x, y):
+        if self.tip_window or not text:
+            return
+        
+        self.tip_window = tk.Toplevel(self.widget)
+        self.tip_window.wm_overrideredirect(True)
+        self.tip_window.wm_geometry(f"+{x+10}+{y+10}")
+
+        label = ttk.Label(self.tip_window, text=text, justify=tk.LEFT,
+                         background="#ffffe0", relief=tk.SOLID, borderwidth=1,
+                         font=("tahoma", "8", "normal"))
+        label.pack(ipadx=1)
+
+    def hide_tip(self):
+        if self.tip_window:
+            self.tip_window.destroy()
+            self.tip_window = None
+
 class StorageTreeView:
     def __init__(self, parent):
         self.logger = logging.getLogger(__name__)
-        logging.basicConfig(level=logging.DEBUG)
+        # logging.basicConfig(level=logging.DEBUG)  # Removed to prevent unwanted output
+        
+        self.item_errors = {}
+        self.tooltip = None
+        self.last_tooltip_item = None
 
         # Create Treeview
         self.tree = ttk.Treeview(parent)
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        self.tooltip = ToolTip(self.tree)
 
         # Add scrollbar
         scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=self.tree.yview)
@@ -42,6 +71,17 @@ class StorageTreeView:
         self.tree.bind('<ButtonRelease-1>', self.on_header_click)
         self.tree.bind('<<TreeviewOpen>>', self.on_open)
         self.tree.bind('<<TreeviewClose>>', self.on_close)
+        self.tree.bind('<Motion>', self.on_motion)
+
+    def on_motion(self, event):
+        item = self.tree.identify_row(event.y)
+        
+        if item != self.last_tooltip_item:
+            self.tooltip.hide_tip()
+            self.last_tooltip_item = item
+            
+            if item and item in self.item_errors:
+                self.tooltip.show_tip(self.item_errors[item], event.x_root, event.y_root)
 
     def get_expanded_items(self) -> List[str]:
         """Get list of expanded item paths"""
@@ -53,7 +93,7 @@ class StorageTreeView:
                     expanded.append(values[3])  # Path is at index 3
             for child in self.tree.get_children(item):
                 collect_expanded(child)
-
+        
         for item in self.tree.get_children():
             collect_expanded(item)
         return expanded
@@ -88,7 +128,7 @@ class StorageTreeView:
             else:
                 self.sort_column = column_name
                 self.sort_reverse = False
-
+            
             self.logger.debug(f"Sort direction reversed: {self.sort_reverse}")
 
             # Rebuild tree with new sorting
@@ -118,7 +158,7 @@ class StorageTreeView:
         for child in data['children']:
             if child['type'] == 'directory':
                 self.sort_items(child)
-
+        
         return data
 
     def get_sort_key(self, item: Dict[str, Any]):
@@ -138,6 +178,9 @@ class StorageTreeView:
         """Clear the treeview"""
         for item in self.tree.get_children():
             self.tree.delete(item)
+        self.item_errors.clear()
+        if self.tooltip:
+            self.tooltip.hide_tip()
 
     def populate(self, data: Dict[str, Any], parent: str = "", parent_size: float = None):
         """Add data to the treeview"""
@@ -161,7 +204,7 @@ class StorageTreeView:
 
         # Handle error display
         if 'error' in data:
-            item_text = f"🗀 {data['name']} (⚠️ {data['error']})"
+            item_text = f"⚠️{data['name']}"
         else:
             item_text = f"🗀 {data['name']}"
 
@@ -171,6 +214,9 @@ class StorageTreeView:
             text=item_text,
             values=(size_str, percentage, files_count, data['path'])
         )
+        
+        if 'error' in data:
+            self.item_errors[item_id] = data['error']
 
         # Add children (only directories)
         if 'children' in data:

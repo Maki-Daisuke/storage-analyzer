@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox, filedialog
 from .gui_components import StorageTreeView
 from .folder_scanner import FolderScanner
 import threading
+import time
 
 class StorageAnalyzer:
     def __init__(self):
@@ -51,8 +52,17 @@ class StorageAnalyzer:
             thread.start()
 
     def scan_folder(self, folder_path):
+        last_update = 0
+        
+        def on_progress(count):
+            nonlocal last_update
+            current_time = time.time()
+            if current_time - last_update > 0.1:
+                self.root.after(0, self.status_var.set, f"Scanning... {count} files found")
+                last_update = current_time
+
         try:
-            folder_data = self.scanner.scan(folder_path)
+            folder_data = self.scanner.scan(folder_path, progress_callback=on_progress)
             self.root.after(0, self.update_tree, folder_data)
             self.root.after(0, self.status_var.set, "Analysis complete")
         except Exception as e:
