@@ -1,10 +1,8 @@
 # Storage Analyzer (ストレージ解析ツール)
 
-![Screenshot](https://github.com/user-attachments/assets/c064d213-495d-4365-aff5-d245eb3db68a)
-*(注: 画像は旧Python版のものです)*
+![Screenshot](https://github.com/user-attachments/assets/6682308a-cacd-42d2-a56d-d6e7b471e789)
 
 ストレージ使用状況を分析・可視化するデスクトップアプリケーションです。
-最新版は **Golang + Wails + Svelte** でリライトされ、高速かつモダンなUIを提供します。
 
 ## 主な機能
 
@@ -69,3 +67,7 @@ wails build
 ## ライセンス
 
 MIT License
+
+## Author
+
+Daisuke (yet another) Maki
