@@ -14,17 +14,22 @@ Windows向けのストレージ使用状況を分析・可視化するPythonベ�
 pip install storage-analyzer
 ```
 
-または、Poetry経由でインストール：
+または、`uv` を使用する場合：
 
 ```bash
-poetry add storage-analyzer
+uv add storage-analyzer
 ```
 
 ## 使用方法
 
-1. アプリケーションを起動：
+1. アプリケーションを起動（インストール済みの場合）：
 ```bash
 storage-analyzer
+```
+
+または、`uv` を使って直接実行：
+```bash
+uv run storage-analyzer
 ```
 
 2. 「Select Folder」ボタンをクリックして、分析したいフォルダを選択します。
@@ -35,6 +40,7 @@ storage-analyzer
 
 - Python 3.8以上
 - tkinter（標準のPythonディストリビューションに含まれています）
+- uv（開発・実行推奨）
 
 ## 開発者向け情報
 
@@ -43,12 +49,13 @@ storage-analyzer
 ```bash
 # リポジトリのクローン
 git clone https://github.com/username/storage-analyzer.git
+cd storage-analyzer
 
 # 依存関係のインストール
-poetry install
+uv sync
 
-# 開発用サーバーの起動
-poetry run storage-analyzer
+# アプリケーションの実行
+uv run storage-analyzer
 ```
 
 ## ライセンス

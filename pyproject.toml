@@ -1,18 +1,18 @@
-[tool.poetry]
+[project]
 name = "storage-analyzer"
 version = "0.1.0"
 description = "A Python-based storage analysis application for Windows with interactive GUI"
-authors = ["Daisuke (yanother) Maki"]
 readme = "README.md"
-packages = [{include = "storage_analyzer"}]
-license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Daisuke (yanother) Maki" }
+]
+license = { text = "MIT" }
+dependencies = []
 
-[tool.poetry.dependencies]
-python = "^3.8"
-
-[tool.poetry.scripts]
+[project.scripts]
 storage-analyzer = "storage_analyzer.storage_analyzer:main"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
