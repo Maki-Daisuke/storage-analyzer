@@ -1,7 +1,9 @@
 # Storage Analyzer (ストレージ解析ツール)
 
-Windows向けのストレージ使用状況を分析・可視化するPythonベースのGUIアプリケーションです。
-フォルダ構造を対話的に探索し、ストレージの使用状況を詳細に分析することができます。
+![Screenshot](https://github.com/user-attachments/assets/c064d213-495d-4365-aff5-d245eb3db68a)
+
+ストレージ使用状況を分析・可視化するPythonベースのGUIアプリケーションです。
+フォルダ構造を探索し、ストレージの使用状況を詳細に分析することができます。
 
 ## 主な機能
 
