@@ -1,73 +1,71 @@
 # Storage Analyzer (ストレージ解析ツール)
 
 ![Screenshot](https://github.com/user-attachments/assets/c064d213-495d-4365-aff5-d245eb3db68a)
+*(注: 画像は旧Python版のものです)*
 
-ストレージ使用状況を分析・可視化するPythonベースのGUIアプリケーションです。
-フォルダ構造を探索し、ストレージの使用状況を詳細に分析することができます。
+ストレージ使用状況を分析・可視化するデスクトップアプリケーションです。
+最新版は **Golang + Wails + Svelte** でリライトされ、高速かつモダンなUIを提供します。
 
 ## 主な機能
 
-- 🌳 対話的なフォルダツリービュー（サイズ情報付き）
-- 📋 ソート可能な列（名前、サイズ、パス、ファイル数、割合）
-- 🔄 フォルダ構造の自動更新（Refresh機能）
-- 📂 一括展開・折りたたみ機能（Expand/Collapse All）
-- ⚠️ アクセス権限エラーの視覚的表示
+- 🌳 **高速なフォルダスキャン**: Go言語による効率的なファイルシステム探索
+- 📊 **詳細な情報表示**:
+  - ファイル/フォルダ名
+  - サイズ (自動単位変換)
+  - 全体に対する割合（パーセント表示 + バーグラフ）
+  - ファイル数
+- 📋 **ソート機能**: 各カラム（名前、サイズ、割合、ファイル数）での並び替え
+- 🔄 **リアルタイム更新**: フォルダ構造の変更を反映（Refresh機能）
+- ⚠️ **エラーハンドリング**: アクセス権限のないフォルダの可視化
 
-## インストール方法
+## システム構成
 
-```bash
-pip install storage-analyzer
+本アプリケーションは [Wails](https://wails.io/) フレームワークを使用しています。
+
+- **Frontend**: SvelteKit + Vite (HTML/CSS/JS)
+- **Backend**: Golang (システムコール、ファイル操作)
+- **Communication**: Wails runtime (Frontend-Backend間のバインディング)
+
+## ディレクトリ構成
+
+```
+storage-analyzer/
+├── app.go              # Wails アプリケーションロジック (FrontendへのAPI定義)
+├── scanner.go          # フォルダスキャン・サイズ計算ロジック (Go)
+├── main.go             # エントリーポイント
+├── frontend/           # フロントエンド (Svelte)
+│   ├── src/
+│   │   ├── lib/
+│   │   │   └── components/
+│   │   │       └── FileTree.svelte  # 再帰的ファイルツリーコンポーネント
+│   │   ├── App.svelte               # メインUI・ソートロジック
+│   │   └── style.css                # グローバルスタイル (Dark Theme)
+│   └── wailsjs/        # 自動生成されるGoバインディング (JS)
+└── build/              # ビルド成果物および設定
 ```
 
-または、`uv` を使用する場合：
+## 開発・ビルド方法
+
+### 必要要件
+
+- **Go** 1.18+
+- **Node.js** 16+
+- **Wails CLI**: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+
+### 開発モード (Live Reload)
 
 ```bash
-uv add storage-analyzer
+wails dev
 ```
+アプリケーションがウィンドウモードで起動し、ソースコード変更時に自動リロードされます。
 
-## 使用方法
-
-1. アプリケーションを起動（インストール済みの場合）：
-```bash
-storage-analyzer
-```
-
-または、`uv` を使って直接実行：
-```bash
-uv run storage-analyzer
-```
-
-2. 「Select Folder」ボタンをクリックして、分析したいフォルダを選択します。
-3. フォルダツリーが表示され、各フォルダのサイズや内容を確認できます。
-4. ツールバーのボタンを使用して表示を操作できます：
-   - **Refresh**: 現在のフォルダを再スキャンして情報を更新します
-   - **Expand All**: 全てのフォルダを展開して表示します
-   - **Collapse All**: 全てのフォルダを折りたたみます
-5. 列ヘッダーをクリックすることで、異なる基準でソートができます。
-6. ステータスバーでスキャンの進捗状況を確認できます。
-
-## 要件
-
-- Python 3.8以上
-- tkinter（標準のPythonディストリビューションに含まれています）
-- uv（開発・実行推奨）
-
-## 開発者向け情報
-
-プロジェクトの開発に参加する場合：
+### 本番ビルド
 
 ```bash
-# リポジトリのクローン
-git clone https://github.com/username/storage-analyzer.git
-cd storage-analyzer
-
-# 依存関係のインストール
-uv sync
-
-# アプリケーションの実行
-uv run storage-analyzer
+wails build
 ```
+`build/bin/` ディレクトリに実行ファイル (`storage-analyzer.exe`) が生成されます。
 
 ## ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。
+MIT License
