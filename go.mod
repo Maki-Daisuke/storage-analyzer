@@ -1,8 +1,11 @@
 module storage-analyzer
 
-go 1.23
+go 1.24.0
 
-require github.com/wailsapp/wails/v2 v2.11.0
+require (
+	github.com/wailsapp/wails/v2 v2.11.0
+	golang.org/x/sync v0.19.0
+)
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect

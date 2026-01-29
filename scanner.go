@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"sync"
+
+	"golang.org/x/sync/semaphore"
 )
 
 // FileNode represents a file or directory in the storage tree
@@ -23,8 +27,17 @@ type ScanResult struct {
 	Error string    `json:"error,omitempty"`
 }
 
-// Global variable to stop scanning if needed (optional implementation)
-// var stopScanning bool
+var sem *semaphore.Weighted
+
+func init() {
+	concurrency := int64(4)
+	if env := os.Getenv("SCAN_CONCURRENCY"); env != "" {
+		if val, err := strconv.Atoi(env); err == nil && val > 0 {
+			concurrency = int64(val)
+		}
+	}
+	sem = semaphore.NewWeighted(concurrency)
+}
 
 func ScanFolder(path string) (*FileNode, error) {
 	info, err := os.Stat(path)
@@ -48,54 +61,94 @@ func ScanFolder(path string) (*FileNode, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
 		node.Error = fmt.Sprintf("Access denied: %v", err)
-		// Even if we can't read dir, we return the node as is
 		return node, nil
 	}
 
-	var totalSize int64
-	var totalFiles int
-	children := make([]*FileNode, 0, len(entries))
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
-	for _, entry := range entries {
+	children := make([]*FileNode, len(entries)) // Pre-allocate with correct size
+
+	for i, entry := range entries {
 		childPath := filepath.Join(path, entry.Name())
-		var childNode *FileNode
 
-		if entry.IsDir() {
-			childNode, err = ScanFolder(childPath)
-			if err != nil {
-				// Should guard against individual folder failures breaking the whole scan?
-				// For now, we note the error in the child node or skip
-				// If ScanFolder returns error for stat failure, we handle it
-				childNode = &FileNode{
-					Name:  entry.Name(),
-					Path:  childPath,
-					Type:  "directory",
-					Error: fmt.Sprintf("Scan error: %v", err),
-				}
-			}
-		} else {
+		if !entry.IsDir() {
+			// Fast path for files
 			info, err := entry.Info()
 			size := int64(0)
 			if err == nil {
 				size = info.Size()
 			}
-			childNode = &FileNode{
+			children[i] = &FileNode{
 				Name:      entry.Name(),
 				Path:      childPath,
 				Type:      "file",
 				Size:      size,
 				FileCount: 1,
 			}
+			continue
 		}
-		
-		totalSize += childNode.Size
-		totalFiles += childNode.FileCount
-		children = append(children, childNode)
+
+		// It's a directory, try to parallelize
+		wg.Add(1)
+
+		// "Greedy with fallback" strategy to prevent deadlock
+		if sem.TryAcquire(1) {
+			// We acquired a token, run in goroutine
+			go func(idx int, cPath string, name string) {
+				defer wg.Done()
+				defer sem.Release(1) // Release token
+
+				childNode, err := ScanFolder(cPath)
+				if err != nil {
+					childNode = &FileNode{
+						Name:  name,
+						Path:  cPath,
+						Type:  "directory",
+						Error: fmt.Sprintf("Scan error: %v", err),
+					}
+				}
+				mu.Lock()
+				children[idx] = childNode
+				mu.Unlock()
+			}(i, childPath, entry.Name())
+		} else {
+			// Buffer full, run synchronously
+			func(idx int, cPath string, name string) {
+				defer wg.Done()
+				childNode, err := ScanFolder(cPath)
+				if err != nil {
+					childNode = &FileNode{
+						Name:  name,
+						Path:  cPath,
+						Type:  "directory",
+						Error: fmt.Sprintf("Scan error: %v", err),
+					}
+				}
+				mu.Lock()
+				children[idx] = childNode
+				mu.Unlock()
+			}(i, childPath, entry.Name())
+		}
+	}
+
+	wg.Wait()
+
+	var totalSize int64
+	var totalFiles int
+
+	finalChildren := make([]*FileNode, 0, len(entries))
+	for _, child := range children {
+		if child != nil {
+			totalSize += child.Size
+			totalFiles += child.FileCount
+			finalChildren = append(finalChildren, child)
+		}
 	}
 
 	node.Size = totalSize
 	node.FileCount = totalFiles
-	node.Children = children
+	node.Children = finalChildren
 
 	return node, nil
 }
