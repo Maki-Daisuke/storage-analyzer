@@ -7,6 +7,7 @@
     ChevronRight,
     ChevronDown,
   } from "lucide-svelte";
+  import { OpenFile } from "../../../wailsjs/go/main/App";
 
   export let node;
   export let depth = 0;
@@ -26,6 +27,13 @@
   function toggle() {
     if (node.type === "directory") {
       isOpen = !isOpen;
+    }
+  }
+
+  // Handle Double Click to Open File/Folder
+  function handleDblClick() {
+    if (node.path) {
+      OpenFile(node.path);
     }
   }
 
@@ -74,6 +82,7 @@
   <div
     class="node-row"
     on:click={toggle}
+    on:dblclick={handleDblClick}
     class:is-folder={node.type === "directory"}
   >
     <!-- Name Column -->

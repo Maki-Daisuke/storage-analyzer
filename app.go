@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os/exec"
+	"syscall"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -40,4 +42,15 @@ func (a *App) SelectFolder() string {
 		return ""
 	}
 	return selection
+}
+
+// OpenFile opens the file or directory using the OS default application
+
+func (a *App) OpenFile(path string) error {
+	var cmd *exec.Cmd
+	// Windows support
+	cmd = exec.Command("cmd", "/c", "start", "", path)
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	// For cross-platform support we would check runtime.GOOS
+	return cmd.Start()
 }
