@@ -2,74 +2,72 @@
 
 ![Screenshot](https://github.com/user-attachments/assets/1f82f945-011b-4c00-923f-9d3f461ff88f)
 
-ストレージ使用状況を分析・可視化するシンプルなデスクトップアプリケーションです。
-名前の由来は `du` (Disk Usage) + `Luminous` (光り輝く/明快な) + `Voluminous` (大容量の)。
-ブラックボックス化したストレージの中身を照らし出し、快適な整理整頓をサポートします。
+A simple desktop application to analyze and visualize storage usage.
 
-## 主な機能
+## Features
 
-- 🌳 **高速なフォルダスキャン**:
-  - 並行処理によるファイルシステム探索
-  - 環境変数 `SCAN_CONCURRENCY` で並行実行数を調整可能（デフォルト: 4）
-- 📊 **詳細な情報表示**:
-  - ファイル/フォルダ名
-  - サイズ (自動単位変換)
-  - 全体に対する割合（パーセント表示 + バーグラフ）
-  - ファイル数
-- 📋 **ソート機能**: 各カラム（名前、サイズ、割合、ファイル数）での並び替え
-- 🔄 **リフレッシュ機能**: 最新のフォルダ構造を再スキャンして反映
-- 📂 **ファイルオープン**: ダブルクリックでファイル/フォルダをOS標準のアプリで開く
-- ⚠️ **エラーハンドリング**: アクセス権限のないフォルダの可視化
+- 🌳 **Fast Folder Scanning**:
+  - Concurrent file system exploration
+  - Concurrency level adjustable via `SCAN_CONCURRENCY` environment variable (Default: 4)
+- 📊 **Detailed Information Display**:
+  - File/Folder name
+  - Size (automatic unit conversion)
+  - Percentage of total usage (percent display + bar graph)
+  - File count
+- 📋 **Sorting**: Sort by any column (name, size, percentage, file count)
+- 🔄 **Refresh**: Rescan to reflect the latest folder structure
+- 📂 **Open File**: Double-click to open files/folders in the OS default application
+- ⚠️ **Error Handling**: Visualization of inaccessible folders
 
-## システム構成
+## Architecture
 
-本アプリケーションは [Wails](https://wails.io/) フレームワークを使用しています。
+This application uses the [Wails](https://wails.io/) framework.
 
 - **Frontend**: Svelte + Vite (HTML/CSS/JS)
-- **Backend**: Golang (システムコール、ファイル操作)
-- **Communication**: Wails runtime (Frontend-Backend間のバインディング)
+- **Backend**: Golang (System calls, File operations)
+- **Communication**: Wails runtime (Frontend-Backend binding)
 
-## ディレクトリ構成
+## Directory Structure
 
 ```
 Duminous/
-├── app.go              # Wails アプリケーションロジック (FrontendへのAPI定義)
-├── scanner.go          # フォルダスキャン・サイズ計算ロジック (Go)
-├── main.go             # エントリーポイント
-├── frontend/           # フロントエンド (Svelte)
+├── app.go              # Wails application logic (API definitions for Frontend)
+├── scanner.go          # Folder scanning and size calculation logic (Go)
+├── main.go             # Entry point
+├── frontend/           # Frontend (Svelte)
 │   ├── src/
 │   │   ├── lib/
 │   │   │   └── components/
-│   │   │       └── FileTree.svelte  # 再帰的ファイルツリーコンポーネント
-│   │   ├── App.svelte               # メインUI・ソートロジック
-│   │   └── style.css                # グローバルスタイル (Dark Theme)
-│   └── wailsjs/        # 自動生成されるGoバインディング (JS)
-└── build/              # ビルド成果物および設定
+│   │   │       └── FileTree.svelte  # Recursive file tree component
+│   │   ├── App.svelte               # Main UI and sort logic
+│   │   └── style.css                # Global styles (Dark Theme)
+│   └── wailsjs/        # Automatically generated Go bindings (JS)
+└── build/              # Build artifacts and configuration
 ```
 
-## 開発・ビルド方法
+## Development & Build
 
-### 必要要件
+### Prerequisites
 
 - **Go** 1.24+
 - **Node.js** 16+
 - **Wails CLI**: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
 
-### 開発モード (Live Reload)
+### Development Mode (Live Reload)
 
 ```bash
 wails dev
 ```
-アプリケーションがウィンドウモードで起動し、ソースコード変更時に自動リロードされます。
+The application will start in windowed mode and automatically reload on source code changes.
 
-### 本番ビルド
+### Production Build
 
 ```bash
 wails build
 ```
-`build/bin/` ディレクトリに実行ファイル (`duminous.exe`) が生成されます。
+The executable file will be generated in the `build/bin/` directory.
 
-## ライセンス
+## License
 
 MIT License
 
