@@ -23,7 +23,7 @@
 
 本アプリケーションは [Wails](https://wails.io/) フレームワークを使用しています。
 
-- **Frontend**: SvelteKit + Vite (HTML/CSS/JS)
+- **Frontend**: Svelte + Vite (HTML/CSS/JS)
 - **Backend**: Golang (システムコール、ファイル操作)
 - **Communication**: Wails runtime (Frontend-Backend間のバインディング)
 
@@ -49,7 +49,7 @@ storage-analyzer/
 
 ### 必要要件
 
-- **Go** 1.18+
+- **Go** 1.24+
 - **Node.js** 16+
 - **Wails CLI**: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
 
