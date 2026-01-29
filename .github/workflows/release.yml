@@ -14,11 +14,11 @@ jobs:
           - os: windows-latest
             platform: windows/amd64
             build_flags: -clean
-            binary_path: build/bin/duminous.exe
+            binary_path: duminous-windows-amd64.exe
           - os: ubuntu-latest
             platform: linux/amd64
             build_flags: -clean -tags webkit2_41
-            binary_path: build/bin/duminous
+            binary_path: duminous-linux-amd64 
 
     runs-on: ${{ matrix.os }}
     permissions:
@@ -49,13 +49,13 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Build Binary
-        run: wails build -platform ${{ matrix.platform }} ${{ matrix.build_flags }}
+        run: wails build -platform ${{ matrix.platform }} -o ${{ matrix.binary_path }} ${{ matrix.build_flags }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ${{ matrix.binary_path }}
+            build/bin/${{ matrix.binary_path }}
           draft: false
           prerelease: false
           generate_release_notes: true
