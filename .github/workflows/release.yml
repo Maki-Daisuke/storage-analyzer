@@ -30,11 +30,8 @@ jobs:
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      - name: Install UPX
-        run: choco install upx
-
       - name: Build Windows Binary
-        run: wails build -platform windows/amd64 -clean -upx
+        run: wails build -platform windows/amd64 -clean
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
