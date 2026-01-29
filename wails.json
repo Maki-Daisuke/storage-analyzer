@@ -1,5 +1,6 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
+  "version": "2",
   "name": "Duminous",
   "outputfilename": "duminous",
   "frontend:install": "npm install",
@@ -9,5 +10,9 @@
   "author": {
     "name": "Daisuke (yet another) Maki",
     "email": "maki.daisuke+gh@gmail.com"
+  },
+  "info": {
+    "productVersion": "1.0.0",
+    "copyright": "© 2026 Daisuke (yet another) Maki"
   }
 }
