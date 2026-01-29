@@ -1,6 +1,6 @@
 # Duminous (Storage Analyzer)
 
-![Screenshot](https://github.com/user-attachments/assets/6682308a-cacd-42d2-a56d-d6e7b471e789)
+![Screenshot](https://github.com/user-attachments/assets/1f82f945-011b-4c00-923f-9d3f461ff88f)
 
 ストレージ使用状況を分析・可視化するシンプルなデスクトップアプリケーションです。
 名前の由来は `du` (Disk Usage) + `Luminous` (光り輝く/明快な) + `Voluminous` (大容量の)。
