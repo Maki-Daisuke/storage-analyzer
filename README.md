@@ -1,8 +1,10 @@
-# Storage Analyzer (ストレージ解析ツール)
+# Duminous (Storage Analyzer)
 
 ![Screenshot](https://github.com/user-attachments/assets/6682308a-cacd-42d2-a56d-d6e7b471e789)
 
-ストレージ使用状況を分析・可視化するデスクトップアプリケーションです。
+ストレージ使用状況を分析・可視化するシンプルなデスクトップアプリケーションです。
+名前の由来は `du` (Disk Usage) + `Luminous` (光り輝く/明快な) + `Voluminous` (大容量の)。
+ブラックボックス化したストレージの中身を照らし出し、快適な整理整頓をサポートします。
 
 ## 主な機能
 
@@ -30,7 +32,7 @@
 ## ディレクトリ構成
 
 ```
-storage-analyzer/
+Duminous/
 ├── app.go              # Wails アプリケーションロジック (FrontendへのAPI定義)
 ├── scanner.go          # フォルダスキャン・サイズ計算ロジック (Go)
 ├── main.go             # エントリーポイント
@@ -65,7 +67,7 @@ wails dev
 ```bash
 wails build
 ```
-`build/bin/` ディレクトリに実行ファイル (`storage-analyzer.exe`) が生成されます。
+`build/bin/` ディレクトリに実行ファイル (`duminous.exe`) が生成されます。
 
 ## ライセンス
 
