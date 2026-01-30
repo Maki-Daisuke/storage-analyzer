@@ -72,8 +72,21 @@ func ScanFolder(path string) (*FileNode, error) {
 	for i, entry := range entries {
 		childPath := filepath.Join(path, entry.Name())
 
+		// Check if it is a Symlink or Reparse Point (Junction)
+		// even if IsDir() is true. If so, treat as file to avoid infinite recursion.
+		if entry.Type()&os.ModeSymlink != 0 {
+			children[i] = &FileNode{
+				Name:      entry.Name(),
+				Path:      childPath,
+				Type:      "file", // Treat as file (leaf)
+				Size:      0,      // Symlink size is negligible or pointer size
+				FileCount: 1,
+			}
+			continue
+		}
+
 		if !entry.IsDir() {
-			// Fast path for files
+			// Fast path for encoded files
 			info, err := entry.Info()
 			size := int64(0)
 			if err == nil {
