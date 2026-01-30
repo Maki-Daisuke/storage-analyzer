@@ -8,7 +8,7 @@
     ChevronDown,
   } from "lucide-svelte";
   import { selectedPath, expandedPaths } from "../stores/fileTreeStore";
-  import { OpenFile } from "../../../wailsjs/go/main/App";
+  import { OpenFile, GetSubdirectory } from "../../../wailsjs/go/main/App";
 
   export let node;
   export let depth = 0;
@@ -24,6 +24,40 @@
 
   // Determine open state from store
   $: isOpen = $expandedPaths.has(node.path);
+
+  // React to open state changes to load children if needed
+  $: if (
+    isOpen &&
+    node.type === "directory" &&
+    (!node.children || node.children.length === 0)
+  ) {
+    loadChildren();
+  }
+
+  let isLoading = false;
+
+  async function loadChildren() {
+    if (isLoading || (node.children && node.children.length > 0)) return;
+
+    // Only load if it's truly a directory that might have children
+    // (If fileCount is 0, maybe don't load? But scanners might not be perfect, safe to try)
+    if (node.fileCount === 0 && node.size === 0) return;
+
+    isLoading = true;
+    try {
+      const children = await GetSubdirectory(node.path);
+      if (children) {
+        node.children = children;
+      } else {
+        node.children = []; // Mark as loaded but empty
+      }
+    } catch (err) {
+      console.error("Failed to load children:", err);
+      node.error = "Failed to load";
+    } finally {
+      isLoading = false;
+    }
+  }
 
   // Toggle folder open state
   function toggle(e) {
@@ -146,6 +180,9 @@
         {/if}
       </span>
       <span class="name-text" title={node.name}>{node.name}</span>
+      {#if isLoading}
+        <span class="loading-dots">...</span>
+      {/if}
       {#if node.error}<span class="error-badge" title={node.error}>⚠️</span
         >{/if}
     </div>
@@ -297,5 +334,10 @@
     color: #fff;
     text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.8);
     white-space: nowrap;
+  }
+  .loading-dots {
+    color: var(--secondary-color);
+    margin-left: 8px;
+    font-size: 10px;
   }
 </style>
