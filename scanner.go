@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"golang.org/x/sync/semaphore"
 )
@@ -39,7 +40,27 @@ func init() {
 	sem = semaphore.NewWeighted(concurrency)
 }
 
-func ScanFolder(path string) (*FileNode, error) {
+// Scanner handles file system scanning
+type Scanner struct {
+	totalFiles int64
+	onProgress func(int64)
+}
+
+// NewScanner creates a new Scanner instance
+func NewScanner(onProgress func(int64)) *Scanner {
+	return &Scanner{
+		onProgress: onProgress,
+	}
+}
+
+// Scan scans the given directory
+func (s *Scanner) Scan(path string) (*FileNode, error) {
+	// Reset counter
+	atomic.StoreInt64(&s.totalFiles, 0)
+	return s.scanRecursive(path)
+}
+
+func (s *Scanner) scanRecursive(path string) (*FileNode, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, err
@@ -55,6 +76,7 @@ func ScanFolder(path string) (*FileNode, error) {
 		node.Type = "file"
 		node.Size = info.Size()
 		node.FileCount = 1
+		s.incrementProgress()
 		return node, nil
 	}
 
@@ -64,7 +86,6 @@ func ScanFolder(path string) (*FileNode, error) {
 		return node, nil
 	}
 
-	var mu sync.Mutex
 	var wg sync.WaitGroup
 
 	children := make([]*FileNode, len(entries)) // Pre-allocate with correct size
@@ -82,6 +103,7 @@ func ScanFolder(path string) (*FileNode, error) {
 				Size:      0,      // Symlink size is negligible or pointer size
 				FileCount: 1,
 			}
+			s.incrementProgress()
 			continue
 		}
 
@@ -99,6 +121,7 @@ func ScanFolder(path string) (*FileNode, error) {
 				Size:      size,
 				FileCount: 1,
 			}
+			s.incrementProgress()
 			continue
 		}
 
@@ -112,7 +135,7 @@ func ScanFolder(path string) (*FileNode, error) {
 				defer wg.Done()
 				defer sem.Release(1) // Release token
 
-				childNode, err := ScanFolder(cPath)
+				childNode, err := s.scanRecursive(cPath)
 				if err != nil {
 					childNode = &FileNode{
 						Name:  name,
@@ -121,15 +144,14 @@ func ScanFolder(path string) (*FileNode, error) {
 						Error: fmt.Sprintf("Scan error: %v", err),
 					}
 				}
-				mu.Lock()
+				// Safe to assign directly as each goroutine uses a unique index
 				children[idx] = childNode
-				mu.Unlock()
 			}(i, childPath, entry.Name())
 		} else {
 			// Buffer full, run synchronously
 			func(idx int, cPath string, name string) {
 				defer wg.Done()
-				childNode, err := ScanFolder(cPath)
+				childNode, err := s.scanRecursive(cPath)
 				if err != nil {
 					childNode = &FileNode{
 						Name:  name,
@@ -138,9 +160,8 @@ func ScanFolder(path string) (*FileNode, error) {
 						Error: fmt.Sprintf("Scan error: %v", err),
 					}
 				}
-				mu.Lock()
+				// Safe to assign directly as each goroutine uses a unique index
 				children[idx] = childNode
-				mu.Unlock()
 			}(i, childPath, entry.Name())
 		}
 	}
@@ -164,4 +185,11 @@ func ScanFolder(path string) (*FileNode, error) {
 	node.Children = finalChildren
 
 	return node, nil
+}
+
+func (s *Scanner) incrementProgress() {
+	count := atomic.AddInt64(&s.totalFiles, 1)
+	if s.onProgress != nil && count%100 == 0 { // Call callback every 100 files
+		s.onProgress(count)
+	}
 }

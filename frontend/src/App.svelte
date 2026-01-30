@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { Scan, SelectFolder } from "../wailsjs/go/main/App";
+  import { EventsOn } from "../wailsjs/runtime/runtime";
   import FileTree from "./lib/components/FileTree.svelte";
   import {
     RefreshCw,
@@ -47,6 +48,12 @@
     expandedPaths.clear();
 
     const startTime = performance.now();
+    let cancelListener = null;
+
+    // Listen for progress events
+    cancelListener = EventsOn("scan:progress", (count) => {
+      statusMessage = `Scanning ${path}... Found ${count} files`;
+    });
 
     try {
       const result = await Scan(path);
@@ -63,6 +70,7 @@
       errorMsg = err.toString();
       statusMessage = "Scan failed: " + err;
     } finally {
+      if (cancelListener) cancelListener();
       isScanning = false;
     }
   }

@@ -29,7 +29,12 @@ func (a *App) startup(ctx context.Context) {
 
 // Scan performs a recursive scan of the given directory
 func (a *App) Scan(path string) ScanResult {
-	node, err := ScanFolder(path)
+	onProgress := func(count int64) {
+		runtime.EventsEmit(a.ctx, "scan:progress", count)
+	}
+
+	scanner := NewScanner(onProgress)
+	node, err := scanner.Scan(path)
 	if err != nil {
 		return ScanResult{Error: err.Error()}
 	}
