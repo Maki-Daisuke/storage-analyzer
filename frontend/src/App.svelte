@@ -10,6 +10,8 @@
     ArrowUp,
     ArrowDown,
   } from "lucide-svelte";
+  import { selectedPath, expandedPaths } from "./lib/stores/fileTreeStore";
+  import { OpenFile } from "../wailsjs/go/main/App";
 
   let currentPath = "";
   let rootNode = null;
@@ -41,6 +43,8 @@
     errorMsg = null;
     rootNode = null;
     statusMessage = `Scanning ${path}...`;
+    selectedPath.set(null);
+    expandedPaths.clear();
 
     const startTime = performance.now();
 
@@ -74,11 +78,126 @@
       sortDirection = sortDirection === "asc" ? "desc" : "asc";
     } else {
       sortField = field;
-      sortDirection = "desc"; // Default to desc for new columns typically for sizes
-      if (field === "name") sortDirection = "asc"; // Default name to asc
+      sortDirection = "desc";
+      if (field === "name") sortDirection = "asc";
     }
   }
+
+  // Keyboard Navigation
+  function handleKeyDown(e) {
+    if (!rootNode || isScanning) return;
+
+    // Only handle if no other interactive element is focused (unlikely here but good practice)
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+
+    if (
+      !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(
+        e.key,
+      )
+    ) {
+      return;
+    }
+
+    e.preventDefault();
+
+    const rows = Array.from(document.querySelectorAll(".node-row"));
+    if (rows.length === 0) return;
+
+    const currentIndex = rows.findIndex((row) =>
+      row.classList.contains("selected"),
+    );
+
+    if (e.key === "ArrowDown") {
+      if (currentIndex === -1) {
+        selectRow(rows[0]);
+      } else if (currentIndex < rows.length - 1) {
+        selectRow(rows[currentIndex + 1]);
+      }
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      if (currentIndex > 0) {
+        selectRow(rows[currentIndex - 1]);
+      }
+      return;
+    }
+
+    if (currentIndex === -1) return;
+    const currentRow = rows[currentIndex];
+    const path = currentRow.dataset.path;
+    const type = currentRow.dataset.type;
+    const isExpanded = currentRow.dataset.expanded === "true";
+
+    if (e.key === "Enter") {
+      OpenFile(path);
+      return;
+    }
+
+    if (e.key === "ArrowRight") {
+      if (type === "directory") {
+        if (!isExpanded) expandedPaths.add(path);
+      }
+      return;
+    }
+
+    if (e.key === "ArrowLeft") {
+      if (type === "directory" && isExpanded) {
+        expandedPaths.delete(path);
+      } else {
+        // Select parent
+        // Helper to find parent row based on DOM structure
+        // Current row is in a container.
+        // Container is sibling of parent row? No.
+        // Structure:
+        // Parent Container
+        //   Parent Row
+        //   Siblings Wrapper (div with slide)
+        //     This Node Container
+
+        const nodeContainer = currentRow.closest(".node-container");
+        const siblingsWrapper = nodeContainer.parentElement;
+        // Verify wrapper is the slide div (it has no class, but it's the only parent)
+        if (siblingsWrapper) {
+          const parentContainer = siblingsWrapper.previousElementSibling;
+          if (
+            parentContainer &&
+            parentContainer.classList.contains("node-container")
+          ) {
+            const parentRow = parentContainer.querySelector(".node-row");
+            if (parentRow) selectRow(parentRow);
+          }
+        }
+      }
+      return;
+    }
+
+    throw new Error("Unreachable code reached. Invalid key: " + e.key);
+  }
+
+  function selectRow(row) {
+    const path = row.dataset.path;
+    // Prevent redundant updates which might cause loops or excessive overhead
+    if ($selectedPath === path) return;
+
+    selectedPath.set(path);
+    // Scroll into view logic
+    // simple: row.scrollIntoView({block: 'nearest'});
+    // better: custom logic to avoid sticky headers overlapping
+
+    // Check if sticky header is present (App.svelte line 103)
+    // The header-row height is approx 35px.
+
+    const headerOffset = 40;
+    const rect = row.getBoundingClientRect();
+    const container = document.querySelector(".content");
+
+    // Using standard scrollIntoView for now, might need tweaks
+    row.scrollIntoView({ block: "nearest" });
+  }
 </script>
+
+<svelte:window on:keydown={handleKeyDown} />
 
 <main class="container">
   <div class="toolbar">

@@ -7,11 +7,12 @@
     ChevronRight,
     ChevronDown,
   } from "lucide-svelte";
+  import { selectedPath, expandedPaths } from "../stores/fileTreeStore";
   import { OpenFile } from "../../../wailsjs/go/main/App";
 
   export let node;
   export let depth = 0;
-  export let expanded = false;
+  // export let expanded = false; // logic moved to store
 
   // Sorting props passed down from root
   export let sortField = "size"; // 'name', 'size', 'fileCount', 'percentage'
@@ -21,17 +22,40 @@
   // If depth is 0, this node is root, so it represents 100% of itself (or we can pass null/0 to hide %)
   export let parentSize = 0;
 
-  let isOpen = expanded;
+  // Determine open state from store
+  $: isOpen = $expandedPaths.has(node.path);
 
   // Toggle folder open state
-  function toggle() {
+  function toggle(e) {
+    if (e) e.stopPropagation(); // prevent triggering row select if clicking arrow
     if (node.type === "directory") {
-      isOpen = !isOpen;
+      expandedPaths.toggle(node.path);
+    }
+  }
+
+  let clickTimer = null;
+
+  function handleClick() {
+    selectedPath.set(node.path);
+
+    // If it's a directory, debounce the toggle to wait for potential double click
+    if (node.type === "directory") {
+      if (clickTimer) clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        toggle();
+        clickTimer = null;
+      }, 150); // 150ms wait to see if a double click happens
     }
   }
 
   // Handle Double Click to Open File/Folder
   function handleDblClick() {
+    // Cancel any pending single click toggle
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+    }
+
     if (node.path) {
       OpenFile(node.path);
     }
@@ -81,19 +105,30 @@
 <div class="node-container">
   <div
     class="node-row"
-    on:click={toggle}
+    on:click={handleClick}
     on:dblclick={handleDblClick}
     class:is-folder={node.type === "directory"}
+    class:selected={$selectedPath === node.path}
+    data-path={node.path}
+    data-type={node.type}
+    data-expanded={isOpen}
   >
     <!-- Name Column -->
     <div class="col-name" style="padding-left: {depth * 20}px">
       <span class="toggle-icon">
         {#if node.type === "directory"}
-          {#if isOpen}
-            <ChevronDown size={14} />
-          {:else}
-            <ChevronRight size={14} />
-          {/if}
+          <div
+            on:click={toggle}
+            role="button"
+            tabindex="-1"
+            style="display:flex;"
+          >
+            {#if isOpen}
+              <ChevronDown size={14} />
+            {:else}
+              <ChevronRight size={14} />
+            {/if}
+          </div>
         {:else}
           <span style="width: 14px; display:inline-block;"></span>
         {/if}
@@ -164,6 +199,15 @@
 
   .node-row:hover {
     background-color: var(--hover-color);
+  }
+
+  .node-row.selected {
+    background-color: var(--accent-color);
+    color: #111; /* Contrast text for selection if needed, or keep white */
+  }
+  /* If keeping text white on selection, maybe use a semi-transparent accent */
+  .node-row.selected {
+    background-color: rgba(66, 153, 225, 0.4); /* Example selection color */
   }
 
   .is-folder {
