@@ -1,8 +1,10 @@
 # Duminous (Storage Analyzer)
 
+A simple desktop application to analyze and visualize storage usage.
+
 ![Screenshot](https://github.com/user-attachments/assets/1f82f945-011b-4c00-923f-9d3f461ff88f)
 
-A simple desktop application to analyze and visualize storage usage.
+https://github.com/user-attachments/assets/6752a24a-48ab-4e74-8c78-e5fd1e8a3227
 
 ## Features
 
