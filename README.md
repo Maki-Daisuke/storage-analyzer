@@ -14,6 +14,7 @@ https://github.com/user-attachments/assets/6752a24a-48ab-4e74-8c78-e5fd1e8a3227
 - 🌳 **Fast Folder Scanning**:
   - Concurrent file system exploration
   - Concurrency level adjustable via `SCAN_CONCURRENCY` environment variable (Default: 4)
+  - Correctly handles Symlinks and Windows Reparse Points (Junctions) to prevent infinite loops and incorrect size calculations
 - 📊 **Detailed Information Display**:
   - File/Folder name
   - Size (automatic unit conversion)
