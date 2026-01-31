@@ -32,7 +32,7 @@ func TestScanner_Scan_Basic(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	scanner := NewScanner(nil)
+	scanner := NewScanner(nil, false)
 	node, err := scanner.Scan(tempDir)
 	if err != nil {
 		t.Fatalf("Scan failed: %v", err)
@@ -74,7 +74,7 @@ func TestScanner_Scan_Symlink(t *testing.T) {
 		t.Skipf("Skipping symlink test due to error (likely permission): %v", err)
 	}
 
-	scanner := NewScanner(nil)
+	scanner := NewScanner(nil, false)
 	node, err := scanner.Scan(tempDir)
 	if err != nil {
 		t.Fatalf("Scan failed: %v", err)
@@ -117,7 +117,7 @@ func TestScanner_Scan_ConcurrencyLarge(t *testing.T) {
 		}
 	}
 
-	scanner := NewScanner(nil)
+	scanner := NewScanner(nil, false)
 	node, err := scanner.Scan(tempDir)
 	if err != nil {
 		t.Fatalf("Scan failed: %v", err)
@@ -182,7 +182,7 @@ func TestScanner_Scan_DeepAndWide(t *testing.T) {
 		createNested(rootDir, 1)
 	}
 
-	scanner := NewScanner(nil)
+	scanner := NewScanner(nil, false)
 	node, err := scanner.Scan(tempDir)
 	if err != nil {
 		t.Fatalf("Scan failed: %v", err)
@@ -196,4 +196,3 @@ func TestScanner_Scan_DeepAndWide(t *testing.T) {
 		t.Errorf("Expected size %d, got %d", expectedSize, node.Size)
 	}
 }
-

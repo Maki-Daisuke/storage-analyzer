@@ -6,6 +6,6 @@ export function GetSubdirectory(arg1:string):Promise<Array<main.FileNode>>;
 
 export function OpenFile(arg1:string):Promise<void>;
 
-export function Scan(arg1:string):Promise<main.ScanResult>;
+export function Scan(arg1:string,arg2:boolean):Promise<main.ScanResult>;
 
 export function SelectFolder():Promise<string>;

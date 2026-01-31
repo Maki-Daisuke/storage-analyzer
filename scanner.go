@@ -42,14 +42,16 @@ func init() {
 
 // Scanner handles file system scanning
 type Scanner struct {
-	totalFiles int64
-	onProgress func(int64)
+	totalFiles      int64
+	onProgress      func(int64)
+	usePhysicalSize bool
 }
 
 // NewScanner creates a new Scanner instance
-func NewScanner(onProgress func(int64)) *Scanner {
+func NewScanner(onProgress func(int64), usePhysicalSize bool) *Scanner {
 	return &Scanner{
-		onProgress: onProgress,
+		onProgress:      onProgress,
+		usePhysicalSize: usePhysicalSize,
 	}
 }
 
@@ -74,7 +76,11 @@ func (s *Scanner) scanRecursive(path string) (*FileNode, error) {
 
 	if !info.IsDir() {
 		node.Type = "file"
-		node.Size = info.Size()
+		if s.usePhysicalSize {
+			node.Size = getPhysicalSize(path, info)
+		} else {
+			node.Size = info.Size()
+		}
 		node.FileCount = 1
 		s.incrementProgress()
 		return node, nil
@@ -95,7 +101,7 @@ func (s *Scanner) scanRecursive(path string) (*FileNode, error) {
 
 		// Check if it is a Symlink or Reparse Point (Junction)
 		// even if IsDir() is true. If so, treat as file to avoid infinite recursion.
-		if entry.Type()&os.ModeSymlink != 0 {
+		if isSymLink(entry) {
 			children[i] = &FileNode{
 				Name:      entry.Name(),
 				Path:      childPath,
@@ -108,11 +114,15 @@ func (s *Scanner) scanRecursive(path string) (*FileNode, error) {
 		}
 
 		if !entry.IsDir() {
-			// Fast path for encoded files
+			// Fast path for regular files
 			info, err := entry.Info()
 			size := int64(0)
 			if err == nil {
-				size = info.Size()
+				if s.usePhysicalSize {
+					size = getPhysicalSize(childPath, info)
+				} else {
+					size = info.Size()
+				}
 			}
 			children[i] = &FileNode{
 				Name:      entry.Name(),

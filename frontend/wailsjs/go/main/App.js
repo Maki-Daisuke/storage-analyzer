@@ -10,8 +10,8 @@ export function OpenFile(arg1) {
   return window['go']['main']['App']['OpenFile'](arg1);
 }
 
-export function Scan(arg1) {
-  return window['go']['main']['App']['Scan'](arg1);
+export function Scan(arg1, arg2) {
+  return window['go']['main']['App']['Scan'](arg1, arg2);
 }
 
 export function SelectFolder() {

@@ -19,6 +19,9 @@ https://github.com/user-attachments/assets/6752a24a-48ab-4e74-8c78-e5fd1e8a3227
   - Size (automatic unit conversion)
   - Percentage of total usage (percent display + bar graph)
   - File count
+- 💾 **Physical Disk Size Calculation**:
+  - Toggle "Calculate Size on Disk" to measure actual disk usage
+  - Accounts for sparse files, compression, and filesystem block allocation
 - 📋 **Sorting**: Sort by any column (name, size, percentage, file count)
 - 🔄 **Refresh**: Rescan to reflect the latest folder structure
 - 📂 **Open File**: Double-click to open files/folders in the OS default application

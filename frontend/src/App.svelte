@@ -20,6 +20,7 @@
   let isScanning = false;
   let errorMsg = null;
   let scanTime = 0;
+  let usePhysicalSize = false;
 
   // Sorting state
   let sortField = "size"; // 'name', 'size', 'fileCount', 'percentage'
@@ -56,7 +57,7 @@
     });
 
     try {
-      const result = await Scan(path);
+      const result = await Scan(path, usePhysicalSize);
 
       if (result.error) {
         errorMsg = result.error;
@@ -223,7 +224,12 @@
       </div>
     </button>
 
-    <!-- Future: Expland All / Collapse All -->
+    <label class="checkbox-label">
+      <input type="checkbox" bind:checked={usePhysicalSize} disabled={isScanning} />
+      Calculate Size on Disk
+    </label>
+
+    <!-- Future: Expand All / Collapse All -->
   </div>
 
   <!-- Header Row for Sorting -->
