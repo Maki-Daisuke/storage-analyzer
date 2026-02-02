@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -31,7 +32,7 @@ type ScanResult struct {
 var sem *semaphore.Weighted
 
 func init() {
-	concurrency := int64(4)
+	concurrency := int64(runtime.NumCPU() / 2) // Default is half of CPU cores
 	if env := os.Getenv("SCAN_CONCURRENCY"); env != "" {
 		if val, err := strconv.Atoi(env); err == nil && val > 0 {
 			concurrency = int64(val)
